@@ -18,6 +18,6 @@ def wiener(e,n):
 					return d
 
 		q0=q1
-		return None
+	return None
 
 
