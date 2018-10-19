@@ -1,0 +1,28 @@
+flag{__xXx_Rasta_best_cipher_in_the_world_xXx__}
+//bad english
+we can set variable 'cnt' in function rasta_standard
+
+it makes us loop(for) invalid
+
+in get_permutation function we can exchange two nearby elements
+ex) get_permutation(factorial(i),n)
+and get_permutation(0,n), get_permutation(factorial(n),n) return range(n)
+
+we can set lin_layer 
+
+generate_keystream_block(0) makes cnt -> 0 , 0 , 0 , 0 , 0, 0
+
+we can find x that makes
+generate_keystream_block(x) makes cnt -> (n-x)! , n!, n!, n!, n!, n!
+
+if generate_keystream_block(0) ^ generate_keystream_block(0) = 0
+we can say key[x]^key[x-1] =0 else key[x]^key[x-1]=1 in most cases
+(it return (key[x]^key[x-1])&(matrix[k][x]^matrix[k][x-1])
+
+finally we have two cases 
+1. key[0]=0
+2. key[1]=1
+
+we make two keys and match with challenge.
+get Flag
+
