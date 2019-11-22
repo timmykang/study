@@ -1,0 +1,6 @@
+T S
+T ^d
+T a[S]oT
+S i
+S c
+S ndn

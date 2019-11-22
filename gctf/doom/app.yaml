@@ -1,0 +1,2 @@
+runtime: go1.12
+env: flex

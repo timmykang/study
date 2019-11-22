@@ -1,0 +1,4 @@
+main.o: main.cpp Graph.h Edge.h Set.h
+Graph.o: Graph.cpp Graph.h Edge.h Set.h
+Edge.o: Edge.cpp Edge.h
+Set.o: Set.cpp Set.h

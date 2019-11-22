@@ -1,0 +1,7 @@
+iptables -A OUTPUT -p icmp -j DROP //add
+iptables -D OUTPUT -p icmp -j DROP //delete
+iptables -L OUTPUT -p icmp -j DROP //look
+iptables -F OUTPUT -p icmp -j DROP //flush
+
+iptables -A OUTPUT -p tcp --deport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp -j DROP

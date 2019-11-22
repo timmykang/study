@@ -1,0 +1,29 @@
+version: '2'
+
+services:
+  server:
+    container_name: 0ctf_server
+    build:
+        context: ./build 
+    links:
+      - mysql
+    environment: 
+      - DATABASE_HOST=mysql
+      - DATABASE_USER=root
+      - DATABASE_PASS=this_is_a_fake_password
+      - DATABASE_NAME=cryptoTask
+      - FLAG=flag{this_is_a_fake_flag}
+    ports:
+      - "0.0.0.0:8081:8081/udp"
+    restart: 'always'
+  mysql:
+    container_name: 0ctf_mysql
+    image: mysql:5.7.25
+    environment: 
+      - MYSQL_ROOT_PASSWORD=this_is_a_fake_password
+      - MYSQL_DATABASE=cryptoTask
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d/
+    ports:
+      - "127.0.0.1:3306:3306"
+    restart: 'always'

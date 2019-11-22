@@ -1,0 +1,3 @@
+main.o: main.cpp Prod.h Set.h
+Set.o: Set.cpp Set.h
+Prod.o: Prod.cpp Prod.h Set.h

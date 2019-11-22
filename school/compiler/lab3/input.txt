@@ -1,0 +1,6 @@
+E TR
+R +TR
+R -TR
+R
+T a
+T b
