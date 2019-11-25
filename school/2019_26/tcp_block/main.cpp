@@ -1,52 +1,63 @@
-#include "arp_spoof.h"
+#include "tcp_block.h"
 
 uint8_t my_mac[6], my_ip[4];
-int session_cnt;
-map<uint32_t, uint8_t*> ip2mac;
-pcap_t *fp;
-vector<session> ip_vector;
+const char* HTTP_METHOD[] = {"GET","POST","HEAD","PUT","DELETE","OPTIONS"};
+const char warning[7]="block!";
 
 void usage() {
-	printf("syntax: arp_spoof <interface> <sender ip 1> <target ip 1> [<sender ip 2> <target ip 2>...]\n");
-	printf("sample: arp_spoof wlan0 192.168.10.2 192.168.10.1 192.168.10.1 192.168.10.2\n");
+	printf("syntax : tcp_block <interface> <host>\n");
+	printf("sample : tcp_block wlan0 test.gilgil.net\n");
 }
 
 int main(int argc, char * argv[]) {
-	if (argc < 4 || argc % 2) {
+	if (argc != 3) {
 		usage();
 		return -1;
 	}
-	session_cnt = argc / 2 - 1;
 	char * interface = argv[1];
+    char * block_site = argv[2];
 	char errbuf[PCAP_ERRBUF_SIZE];
-	const u_char *packet;
-	pthread_t thread1, thread2;
 	struct pcap_pkthdr * header;	
-	fp = pcap_open_live(interface, BUFSIZ, 1, 1000, errbuf);
+	pcap_t * fp = pcap_open_live(interface, BUFSIZ, 1, 1, errbuf);
 	if (fp == NULL) {
 		printf("ERROR3\n");
 		exit(1);
 	}
 	get_my_ip(interface);
 	get_my_mac(interface);
-	for(int i = 0; i < session_cnt; i++) {
-		session tmp;
-		tmp.sender_ip = inet_addr(argv[i * 2 + 2]);
-		if(ip2mac.find(tmp.sender_ip) == ip2mac.end()) {
-			ip2mac.insert({tmp.sender_ip, (uint8_t *)malloc(6)});
-			get_mac(ip2mac[tmp.sender_ip], (uint8_t *)&tmp.sender_ip);
+	uint8_t * pkt;
+	while(1) {
+		int res = pcap_next_ex(fp, &header, (const u_char **)&pkt);
+		if(res == 0) continue;
+        if(res == -1 || res == -2) {
+            pcap_close(fp);
+            return 0;
+        }
+        struct ether_header * packet_ether = (struct ether_header *)pkt;
+        if(ntohs(packet_ether -> type) != 0x0800) continue;
+        struct ip_header * packet_ip = (struct ip_header *)(pkt + 14);
+        int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
+        if(packet_ip -> p != 6)) continue;
+        struct tcp_header * packet_tcp = (struct tcp_header *)(pkt + 14 + ip_len)
+        int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
+        int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
+        if(http_len < 7) continue;
+        uint8_t * packet_http = pkt + 14 + ip_len + tcp_len;
+        int i;
+        for(i = 0; i < 6; ++i){
+			if(memcmp(HTTP_METHOD[i], packet_http, strlen(HTTP_METHOD[i])) != 0)
+				break;
 		}
-		tmp.target_ip = inet_addr(argv[i * 2 + 3]);
-		if(ip2mac.find(tmp.target_ip) == ip2mac.end()) {
-			ip2mac.insert({tmp.target_ip, (uint8_t *)malloc(6)});
-			get_mac(ip2mac[tmp.target_ip], (uint8_t *)&tmp.target_ip);
-		}
-		ip_vector.push_back(tmp);
-	}
-	pthread_create(&thread1, NULL, infection_timer, NULL);
-	pthread_create(&thread2, NULL, pkt_loop_thread, NULL);
-	pthread_join(thread1, NULL);
-	pthread_join(thread2, NULL);
-	pcap_close(fp);
+        if(i == 6) continue;
+        for(i = 0; i < http_len - 6; i++) {
+            if(!memcmp(packet_http + i, "Host: ", 6)) {
+                if(!memcmp(packet_http + i + 6, host, strlen(host))) {
+                    forward_rst(fp, pkt);
+                    backward_fin(fp, pkt);\
+                }
+            }
+        }
+    }
+    pcap_close(fp);
 	return 0;
 }

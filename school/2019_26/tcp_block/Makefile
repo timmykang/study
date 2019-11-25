@@ -1,13 +1,13 @@
-all: arp_spoof
+all: tcp_block
 
-arp_spoof: main.o arp_spoof.o
-	g++ -g -o arp_spoof main.o arp_spoof.o -lpcap -lpthread
+tcp_block: main.o tcp_block.o
+	g++ -g -o tcp_block main.o tcp_block.o -lpcap
 
-arp_spoof.o: arp_spoof.cpp arp_spoof.h
-	g++ -g -c -o arp_spoof.o arp_spoof.cpp
+tcp_block.o: tcp_block.cpp tcp_block.h
+	g++ -g -c -o tcp_block.o tcp_block.cpp
 
-main.o: main.cpp arp_spoof.h
+main.o: main.cpp tcp_block.h
 	g++ -g -c -o main.o main.cpp
 
 clean:
-	rm -f arp_spoof *.o
+	rm -f tcp_block *.o

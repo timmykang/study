@@ -13,11 +13,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <pcap.h>
-#include <pthread.h>
 #include <map>
 #include <vector>
 
 using namespace std;
+
+extern uint8_t my_mac[6], my_ip[4];
 
 struct ether_header {
 	uint8_t	dhost[6];
@@ -55,9 +56,11 @@ struct tcp_header {
 	uint16_t urg_ptr;
 };
 
-void forward_rst(pcap_t* handle, uint8_t* pkt, int ip_len, int tcp_len, int http_len);
-void forward_fin(pcap_t* handle, uint8_t* pkt, int ip_len, int tcp_len, int http_len);
-void backward_rst(pcap_t* handle, uint8_t* pkt, int ip_len, int tcp_len, int http_len);
-void backward_fin(pcap_t* handle, uint8_t* pkt, int ip_len, int tcp_len, int http_len);
+void get_my_ip(char * interface);
+void get_my_mac(char * interface);
+void forward_rst(pcap_t* handle, uint8_t* pkt);
+void forward_fin(pcap_t* handle, uint8_t* pkt, char * data);
+void backward_rst(pcap_t* handle, uint8_t* pkt);
+void backward_fin(pcap_t* handle, uint8_t* pkt, chat * data);
 uint16_t ip_checksum(uint8_t* ip_packet, int ip_len);
 uint16_t tcp_checksum(uint8_t* ip_packet, int ip_len, int tcp_len, int http_len);
