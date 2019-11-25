@@ -130,7 +130,7 @@ void forward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-	int http_len = ntohs(*((uint16_t*)(rcvpkt + eth_hdr_len + 2))) - ip_len - tcp_len;
+	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
 	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	uint8_t packet[14 + ip_len + tcp_len + strlen(data)];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
@@ -157,7 +157,7 @@ void backward_rst(pcap_t* handle, uint8_t* pkt) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-	int http_len = ntohs(*((uint16_t *)(rcvpkt + 14 + 2))) - ip_len - tcp_len;
+	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
 	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	uint8_t packet[14 + ip_len + tcp_len];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
@@ -191,7 +191,7 @@ void backward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-	int http_len = ntohs(*((uint16_t*)(rcvpkt + eth_hdr_len + 2))) - ip_len - tcp_len;
+	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
 	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	uint8_t packet[14 + ip_len + tcp_len + strlen(data)];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
