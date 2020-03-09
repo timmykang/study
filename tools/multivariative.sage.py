@@ -50,7 +50,7 @@ def solve(N, unknown, known, unknown_ans=None, beta=_sage_const_0p5 , m=_sage_co
     # Make function monic
     if unknown[_sage_const_0 ][_sage_const_0 ] != _sage_const_1 :
         f = f / _sage_const_2 **unknown[_sage_const_0 ][_sage_const_0 ]
-    
+
     f = f.change_ring(ZZ)
     x = f.parent().objgens()[_sage_const_1 ]
 
@@ -139,6 +139,7 @@ def solve(N, unknown, known, unknown_ans=None, beta=_sage_const_0p5 , m=_sage_co
         # It would be nice if there's better way than this :(
         # To use jacobian, we need symbolic variables
         f = symbolic_expression([ h[i](x) for i in ii ]).function(x_)
+        print(f)
         jac = jacobian(f, x_)
         v = vector([ t // _sage_const_2  for t in X ])
 
@@ -171,10 +172,10 @@ x2_real = p >> (_sage_const_512  - kbits)
 
 known = p & (( (_sage_const_1  << (_sage_const_512  - _sage_const_2 *kbits) ) - _sage_const_1  ) << kbits)
 N = p * q
-
-ans = solve(N, [(_sage_const_0 , kbits), (_sage_const_512  - kbits, kbits)], known, unknown_ans=(x1_real, x2_real), m=_sage_const_8 , t=_sage_const_2 )
-assert ans[_sage_const_0 ] == x1_real and ans[_sage_const_1 ] == x2_real
-
+'''
+ans = solve(N, [(0, kbits), (512 - kbits, kbits)], known, unknown_ans=(x1_real, x2_real), m=8, t=2)
+assert ans[0] == x1_real and ans[1] == x2_real
+'''
 # Three chunks
 
 kbits = _sage_const_30 

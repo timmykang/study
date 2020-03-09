@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
 		struct sockaddr_in addr;
 		socklen_t clientlen = sizeof(sockaddr);
 		int childfd = accept(sockfd, reinterpret_cast<struct sockaddr*>(&addr), &clientlen);
+        printf("111\n");
 		if (childfd < 0) {
 			perror("ERROR on accept");
 			break;

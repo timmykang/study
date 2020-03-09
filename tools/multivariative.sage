@@ -45,7 +45,7 @@ def solve(N, unknown, known, unknown_ans=None, beta=0.5, m=8, t=2):
     # Make function monic
     if unknown[0][0] != 1:
         f = f / 2^unknown[0][0]
-    
+
     f = f.change_ring(ZZ)
     x = f.parent().objgens()[1]
 
@@ -134,6 +134,7 @@ def solve(N, unknown, known, unknown_ans=None, beta=0.5, m=8, t=2):
         # It would be nice if there's better way than this :(
         # To use jacobian, we need symbolic variables
         f = symbolic_expression([ h[i](x) for i in ii ]).function(x_)
+        print(f)
         jac = jacobian(f, x_)
         v = vector([ t // 2 for t in X ])
 
@@ -166,10 +167,10 @@ x2_real = p >> (512 - kbits)
 
 known = p & (( (1 << (512 - 2*kbits) ) - 1 ) << kbits)
 N = p * q
-
+'''
 ans = solve(N, [(0, kbits), (512 - kbits, kbits)], known, unknown_ans=(x1_real, x2_real), m=8, t=2)
 assert ans[0] == x1_real and ans[1] == x2_real
-
+'''
 # Three chunks
 
 kbits = 30

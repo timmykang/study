@@ -20,6 +20,15 @@ using namespace std;
 
 extern uint8_t my_mac[6], my_ip[4];
 
+
+struct Pseudoheader{
+    uint32_t src;
+    uint32_t dest;
+    uint8_t reserved=0;
+    uint8_t protocol;
+    uint16_t tcp_len;
+};
+
 struct ether_header {
 	uint8_t	dhost[6];
 	uint8_t	shost[6];
@@ -58,9 +67,9 @@ struct tcp_header {
 
 void get_my_ip(char * interface);
 void get_my_mac(char * interface);
-void forward_rst(pcap_t* handle, uint8_t* pkt);
-void forward_fin(pcap_t* handle, uint8_t* pkt, char * data);
-void backward_rst(pcap_t* handle, uint8_t* pkt);
-void backward_fin(pcap_t* handle, uint8_t* pkt, chat * data);
-uint16_t ip_checksum(uint8_t* ip_packet, int ip_len);
-uint16_t tcp_checksum(uint8_t* ip_packet, int ip_len, int tcp_len, int http_len);
+void forward_rst(pcap_t * handle, uint8_t * pkt);
+void forward_fin(pcap_t * handle, uint8_t * pkt, const char * data);
+void backward_rst(pcap_t * handle, uint8_t * pkt);
+void backward_fin(pcap_t * handle, uint8_t * pkt, const char * data);
+uint16_t ip_checksum(uint8_t * ip_packet);
+uint16_t tcp_checksum(uint8_t * ip_packet, int ip_len);

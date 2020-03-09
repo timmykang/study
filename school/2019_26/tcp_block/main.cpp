@@ -36,11 +36,11 @@ int main(int argc, char * argv[]) {
         struct ether_header * packet_ether = (struct ether_header *)pkt;
         if(ntohs(packet_ether -> type) != 0x0800) continue;
         struct ip_header * packet_ip = (struct ip_header *)(pkt + 14);
-        int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
-        if(packet_ip -> p != 6)) continue;
-        struct tcp_header * packet_tcp = (struct tcp_header *)(pkt + 14 + ip_len)
-        int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-        int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
+        int ip_len = (packet_ip -> ver_hl & 0x0f) * 4;
+        if(packet_ip -> p != 6) continue;
+        struct tcp_header * packet_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
+        int tcp_len = (packet_tcp -> tcp_len & 0xf0) / 4;
+        int http_len = ntohs(packet_ip -> len) - ip_len - tcp_len;
         if(http_len < 7) continue;
         uint8_t * packet_http = pkt + 14 + ip_len + tcp_len;
         int i;
@@ -51,9 +51,9 @@ int main(int argc, char * argv[]) {
         if(i == 6) continue;
         for(i = 0; i < http_len - 6; i++) {
             if(!memcmp(packet_http + i, "Host: ", 6)) {
-                if(!memcmp(packet_http + i + 6, host, strlen(host))) {
+                if(!memcmp(packet_http + i + 6, block_site, strlen(block_site))) {
                     forward_rst(fp, pkt);
-                    backward_fin(fp, pkt);\
+                    backward_fin(fp, pkt, warning);
                 }
             }
         }

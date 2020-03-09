@@ -1,5 +1,7 @@
 #include "tcp_block.h"
-
+#pragma pack(push,1)
+#pragma pack(pop)
+#define CARRY 65536
 void get_my_ip(char * interface) {
 	struct ifreq ifr;
 	struct sockaddr_in * sin;
@@ -76,13 +78,13 @@ uint16_t ip_checksum(uint8_t * ip_packet) {
 
 uint16_t tcp_checksum(uint8_t * ip_packet, int len) {
 	struct Pseudoheader pseudoheader;
-	struct ip_header * iph = (struct ip_header *)data;
-	struct tcp_header * tcph = (struct tcp_header *)(data + ((iph -> ver_hl) & 0x0f) * 4);
+	struct ip_header * iph = (struct ip_header *)ip_packet;
+	struct tcp_header * tcph = (struct tcp_header *)(ip_packet + ((iph -> ver_hl) & 0x0f) * 4);
 	
 	memcpy(&pseudoheader.src, &iph -> ip_src, sizeof(pseudoheader.src));
 	memcpy(&pseudoheader.dest, &iph -> ip_dst, sizeof(pseudoheader.dest));
 	pseudoheader.protocol = iph -> p;
-	pseudoheader.tcp_len = htons(dataLen - ((iph -> (iph -> ver_hl) & 0x0f) * 4));
+	pseudoheader.tcp_len = htons(len - (((iph -> ver_hl) & 0x0f) * 4));
 	uint16_t pseudoResult = calculate((uint16_t *)&pseudoheader, sizeof(pseudoheader));
 	
 	tcph -> checksum = 0;
@@ -102,9 +104,9 @@ uint16_t tcp_checksum(uint8_t * ip_packet, int len) {
 void forward_rst(pcap_t * handle, uint8_t* pkt) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
+    struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
-	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
+	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;	
 	uint8_t packet[14 + ip_len + tcp_len];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
 	struct tcp_header * packet_tcp = (struct tcp_header *)(packet + 14 + ip_len);
@@ -122,16 +124,16 @@ void forward_rst(pcap_t * handle, uint8_t* pkt) {
 	packet_ip -> checksum = 0;
 	packet_ip -> checksum = htons(ip_checksum(packet + 14));
 	packet_tcp -> checksum = 0;
-	packet_tcp -> checksum = htons(ip_checksum(packet + 14, ntohs(packet_ip -> len));
+	packet_tcp -> checksum = htons(tcp_checksum(packet + 14, ntohs(packet_ip -> len)));
 	pcap_sendpacket(handle, packet, 14 + ntohs(packet_ip -> len));
 }
 
-void forward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
+void forward_fin(pcap_t * handle, uint8_t * pkt, const char * data) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
+    struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
 	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
-	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	uint8_t packet[14 + ip_len + tcp_len + strlen(data)];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
 	struct tcp_header * packet_tcp = (struct tcp_header *)(packet + 14 + ip_len);
@@ -149,16 +151,16 @@ void forward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
 	packet_ip -> checksum = 0;
 	packet_ip -> checksum = htons(ip_checksum(packet + 14));
 	packet_tcp -> checksum = 0;
-	packet_tcp -> checksum = htons(ip_checksum(packet + 14, ntohs(packet_ip -> len));
+	packet_tcp -> checksum = htons(tcp_checksum(packet + 14, ntohs(packet_ip -> len)));
 	pcap_sendpacket(handle, packet, 14 + ntohs(packet_ip -> len));
 }
 
-void backward_rst(pcap_t* handle, uint8_t* pkt) {
+void backward_rst(pcap_t * handle, uint8_t * pkt) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
+    struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
 	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
-	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	uint8_t packet[14 + ip_len + tcp_len];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
 	struct tcp_header * packet_tcp = (struct tcp_header *)(packet + 14 + ip_len);
@@ -168,10 +170,10 @@ void backward_rst(pcap_t* handle, uint8_t* pkt) {
 	memcpy(packet, pkt, 14 + ip_len + tcp_len);
 	memcpy(packet_ether -> dhost, rcvpacket_ether -> shost, 6);
 	memcpy(packet_ether -> shost, my_mac, 6);
-	memcpy(packet_ip -> ip_src, rcvpacket_ip -> ip_src, 4);
-	memcpy(packet_ip -> ip_dst, rcvpacket_ip -> ip_dst, 4);
-	memcpy(packet_tcp -> src, rcvpacket_tcp -> src, 2);
-	memcpy(packet_tcp -> dst, rcvpacket_tcp -> dst, 2);
+	packet_ip -> ip_src = rcvpacket_ip -> ip_src;
+	packet_ip -> ip_dst, rcvpacket_ip -> ip_dst;
+	packet_tcp -> src = rcvpacket_tcp -> src;
+	packet_tcp -> dst = rcvpacket_tcp -> dst;
 	packet_ip -> tos = 0x44;
 	packet_ip -> len = htons(ip_len + tcp_len);
 	packet_ip -> ttl = 0xff;
@@ -183,16 +185,16 @@ void backward_rst(pcap_t* handle, uint8_t* pkt) {
 	packet_ip -> checksum = 0;
 	packet_ip -> checksum = htons(ip_checksum(packet + 14));
 	packet_tcp -> checksum = 0;
-	packet_tcp -> checksum = htons(ip_checksum(packet + 14, ntohs(packet_ip -> len));
+	packet_tcp -> checksum = htons(tcp_checksum(packet + 14, ntohs(packet_ip -> len)));
 	pcap_sendpacket(handle, packet, 14 + ntohs(packet_ip -> len));
 }
 
-void backward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
+void backward_fin(pcap_t * handle, uint8_t * pkt, const char * data) {
 	struct ip_header * rcvpacket_ip = (struct ip_header *)(pkt + 14);	
 	int ip_len = (rcvpacket_ip -> ver_hl & 0x0f) * 4;
+    struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
 	int tcp_len = (rcvpacket_tcp -> tcp_len & 0xf0) / 4;
-	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;
-	struct tcp_header * rcvpacket_tcp = (struct tcp_header *)(pkt + 14 + ip_len);
+	int http_len = ntohs(rcvpacket_ip -> len) - ip_len - tcp_len;	
 	uint8_t packet[14 + ip_len + tcp_len + strlen(data)];
 	struct ip_header * packet_ip = (struct ip_header *)(packet + 14);
 	struct tcp_header * packet_tcp = (struct tcp_header *)(packet + 14 + ip_len);
@@ -202,10 +204,10 @@ void backward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
 	memcpy(packet, pkt, 14 + ip_len + tcp_len);
 	memcpy(packet_ether -> dhost, rcvpacket_ether -> shost, 6);
 	memcpy(packet_ether -> shost, my_mac, 6);
-	memcpy(packet_ip -> ip_src, rcvpacket_ip -> ip_src, 4);
-	memcpy(packet_ip -> ip_dst, rcvpacket_ip -> ip_dst, 4);
-	memcpy(packet_tcp -> src, rcvpacket_tcp -> src, 2);
-	memcpy(packet_tcp -> dst, rcvpacket_tcp -> dst, 2);
+	packet_ip -> ip_src = rcvpacket_ip -> ip_src;
+	packet_ip -> ip_dst, rcvpacket_ip -> ip_dst;
+	packet_tcp -> src = rcvpacket_tcp -> src;
+	packet_tcp -> dst = rcvpacket_tcp -> dst;
 	memcpy(packet + 14 + ip_len + tcp_len, data, strlen(data));
 
 	packet_ip -> tos = 0x44;
@@ -219,6 +221,6 @@ void backward_fin(pcap_t* handle, uint8_t* pkt, char * data) {
 	packet_ip -> checksum = 0;
 	packet_ip -> checksum = htons(ip_checksum(packet + 14));
 	packet_tcp -> checksum = 0;
-	packet_tcp -> checksum = htons(ip_checksum(packet + 14, ntohs(packet_ip -> len));
+	packet_tcp -> checksum = htons(tcp_checksum(packet + 14, ntohs(packet_ip -> len)));
 	pcap_sendpacket(handle, packet, 14 + ntohs(packet_ip -> len));
 }

@@ -27,7 +27,7 @@ p = p+tmp*addx
 q = q-tmp*addy
 # hitcon{1t_is_50_easy_t0_find_th3_modulus_back@@!!@!@!@@!}
 # 103478955
-for j in range(12460202,100000000):
+for j in range(20600000,100000000):
 	i=j*5
 	q1 = q - (i) * addy
 	p1 = p + (i) * addx
